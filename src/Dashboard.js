@@ -23,7 +23,9 @@ import Deposits from './Deposits';
 import Orders from './Orders';
 import Title from './Title';
 // Drag n Drop
-import PaperDropZone from './DragNDrop';
+import {useDropzone} from 'react-dropzone';
+// List File View
+import ListFile from './listFiles';
 
 function MadeWithLove() {
   return (
@@ -123,6 +125,7 @@ const useStyles = makeStyles(theme => ({
 export default function Dashboard() {
   const classes = useStyles();
   const [open, setOpen] = React.useState(true);
+  const [ droppedFiles, updateDroppedFiles ] = React.useState([]);
   const handleDrawerOpen = () => {
     setOpen(true);
   };
@@ -130,6 +133,29 @@ export default function Dashboard() {
     setOpen(false);
   };
   const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
+
+  const PaperDropZone = () => {
+    const onDrop = useCallback(acceptedFiles => {
+      updateDroppedFiles(acceptedFiles);
+      console.log('Idhor: ', droppedFiles);
+    }, [])
+    const {getRootProps, getInputProps, isDragActive, isDragReject} = useDropzone({onDrop})
+  
+    return (
+        <>
+            <Title>Drag & Drop Files</Title>
+            <div {...getRootProps()}>
+                <input {...getInputProps()} />
+                <div style={{ minHeight: 300, padding: 15, border: '5px dotted #00518957' }}>
+                    <Typography variant="body2" color="textSecondary" align="center">
+                    {!isDragActive && 'Click here or drop a file to upload!'}
+                    {isDragActive && !isDragReject && "Drop it like it's hot!"}
+                    </Typography>
+                </div>
+            </div>
+        </>
+    )
+  }
 
   return (
     <div className={classes.root}>
@@ -196,6 +222,21 @@ export default function Dashboard() {
                 </>
               </Paper>
             </Grid>
+            {/* File List */}
+            { droppedFiles.length > 0 &&
+              <Grid item xs={12}>
+                <Paper className={classes.paper}>
+                  <Title>Files to Upload</Title>
+                  <ul>
+                    {
+                      droppedFiles.length > 0 && droppedFiles.map( (file, index) => (
+                        <ListFile key={ index } file={ file } />
+                      ))
+                    }
+                  </ul>
+                </Paper>
+              </Grid>
+            }
             <Grid item xs={12}>
               <Paper className={classes.paper}>
                 <Orders />

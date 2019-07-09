@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -21,13 +21,16 @@ import { mainListItems, secondaryListItems } from './listItems';
 import Chart from './Chart';
 import Deposits from './Deposits';
 import Orders from './Orders';
+import Title from './Title';
+// Drag n Drop
+import PaperDropZone from './DragNDrop';
 
 function MadeWithLove() {
   return (
     <Typography variant="body2" color="textSecondary" align="center">
       {'Built with love by the '}
-      <Link color="inherit" href="https://material-ui.com/">
-        Material-UI
+      <Link color="inherit" href="https://alphasquad.studio">
+        Alpha Squad
       </Link>
       {' team.'}
     </Typography>
@@ -76,7 +79,7 @@ const useStyles = makeStyles(theme => ({
   },
   drawerPaper: {
     position: 'relative',
-    backgroundColor: '#B7F557',
+    backgroundColor: '#00518957',
     whiteSpace: 'nowrap',
     width: drawerWidth,
     transition: theme.transitions.create('width', {
@@ -115,6 +118,7 @@ const useStyles = makeStyles(theme => ({
     height: 240,
   },
 }));
+
 
 export default function Dashboard() {
   const classes = useStyles();
@@ -184,7 +188,14 @@ export default function Dashboard() {
                 <Deposits />
               </Paper>
             </Grid>
-            {/* Recent Orders */}
+            {/* Drag n Drop */}
+            <Grid item xs={12}>
+              <Paper className={classes.paper}>
+                <>
+                  <PaperDropZone />
+                </>
+              </Paper>
+            </Grid>
             <Grid item xs={12}>
               <Paper className={classes.paper}>
                 <Orders />

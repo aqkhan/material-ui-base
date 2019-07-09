@@ -30,7 +30,7 @@ export default function ListFile({ file }) {
             <WorkIcon />
           </Avatar>
         </ListItemAvatar>
-        <ListItemText primary={ file.name } secondary={ friendlyDate.getTime() } />
+        <ListItemText primary={ file.name } secondary={ friendlyDate.toDateString() } />
       </ListItem>
     </List>
   );

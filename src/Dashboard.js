@@ -26,6 +26,8 @@ import Title from './Title';
 import {useDropzone} from 'react-dropzone';
 // List File View
 import ListFile from './listFiles';
+// Interactions
+import {useSpring, animated} from 'react-spring';
 
 function MadeWithLove() {
   return (
@@ -123,6 +125,9 @@ const useStyles = makeStyles(theme => ({
 
 
 export default function Dashboard() {
+  // Props for spring
+  const props = useSpring({opacity: 1, from: {opacity: 0}});
+  
   const classes = useStyles();
   const [open, setOpen] = React.useState(true);
   const [ droppedFiles, updateDroppedFiles ] = React.useState([]);
@@ -225,16 +230,18 @@ export default function Dashboard() {
             {/* File List */}
             { droppedFiles.length > 0 &&
               <Grid item xs={12}>
-                <Paper className={classes.paper}>
-                  <Title>Files to Upload</Title>
-                  <ul>
-                    {
-                      droppedFiles.length > 0 && droppedFiles.map( (file, index) => (
-                        <ListFile key={ index } file={ file } />
-                      ))
-                    }
-                  </ul>
-                </Paper>
+                <animated.div style={props}>
+                  <Paper className={classes.paper}>
+                    <Title>Files to Upload</Title>
+                    <ul>
+                      {
+                        droppedFiles.length > 0 && droppedFiles.map( (file, index) => (
+                          <ListFile key={ index } file={ file } />
+                        ))
+                      }
+                    </ul>
+                  </Paper>
+                </animated.div>
               </Grid>
             }
             <Grid item xs={12}>

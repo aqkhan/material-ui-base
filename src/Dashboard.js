@@ -22,12 +22,22 @@ import Chart from './Chart';
 import Deposits from './Deposits';
 import Orders from './Orders';
 import Title from './Title';
+
 // Drag n Drop
-import {useDropzone} from 'react-dropzone';
+import { useDropzone } from 'react-dropzone';
+
 // List File View
-import ListFile from './listFiles';
-// Interactions
-import {useSpring, animated} from 'react-spring';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
+import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
+import ListItemAvatar from '@material-ui/core/ListItemAvatar';
+import Avatar from '@material-ui/core/Avatar';
+import WorkIcon from '@material-ui/icons/Work';
+import DeleteIcon from '@material-ui/icons/Delete';
+
+// Fab button
+import Fab from '@material-ui/core/Fab';
+import NavigationIcon from '@material-ui/icons/Navigation';
 
 function MadeWithLove() {
   return (
@@ -46,6 +56,17 @@ const drawerWidth = 240;
 const useStyles = makeStyles(theme => ({
   root: {
     display: 'flex',
+  },
+  listFiles: {
+    width: '100%',
+    //maxWidth: 360,
+    backgroundColor: theme.palette.background.paper,
+  },
+  fab: {
+    margin: theme.spacing(1),
+  },
+  extendedIcon: {
+    marginRight: theme.spacing(1),
   },
   toolbar: {
     paddingRight: 24, // keep right padding when drawer closed
@@ -125,12 +146,13 @@ const useStyles = makeStyles(theme => ({
 
 
 export default function Dashboard() {
-  // Props for spring
-  const props = useSpring({opacity: 1, from: {opacity: 0}});
   
   const classes = useStyles();
   const [open, setOpen] = React.useState(true);
+
+  // Dropped files
   const [ droppedFiles, updateDroppedFiles ] = React.useState([]);
+  
   const handleDrawerOpen = () => {
     setOpen(true);
   };
@@ -139,12 +161,14 @@ export default function Dashboard() {
   };
   const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
 
+  // Drag n Drop custom component
+
   const PaperDropZone = () => {
     const onDrop = useCallback(acceptedFiles => {
-      updateDroppedFiles(acceptedFiles);
-      console.log('Idhor: ', droppedFiles);
+      let newDroppedFiles = droppedFiles.concat(acceptedFiles);
+      updateDroppedFiles(newDroppedFiles);
     }, [])
-    const {getRootProps, getInputProps, isDragActive, isDragReject} = useDropzone({onDrop})
+    const {getRootProps, getInputProps, isDragActive, isDragReject} = useDropzone({ onDrop })
   
     return (
         <>
@@ -160,6 +184,58 @@ export default function Dashboard() {
             </div>
         </>
     )
+  }
+
+  // Remove dropped file
+  const removeFile = (key) => {
+    let newDroppedFiles = droppedFiles.filter( (file, index) => {
+      if (index !== key)
+        return file
+    });
+    updateDroppedFiles(newDroppedFiles);
+  }
+
+  // Discard all locally loaded files
+  const removeAllFiles = () => {
+    updateDroppedFiles([]);
+  }
+
+  // Friendly date
+
+  const friendlyDate = (timeStamp) => {
+    let fd = new Date(timeStamp);
+    return fd.toDateString();
+  }
+
+  // Upload and remove all button
+
+  const FabButton = () => {
+    const classes = useStyles();
+  
+    return (
+      <div>
+        <Fab variant="extended" aria-label="Upload" className={classes.fab} color="primary" onClick={ () => uploadFiles() }>
+          <NavigationIcon className={classes.extendedIcon} />
+          UPLOAD
+        </Fab>
+        <Fab aria-label="Delete" className={classes.fab} onClick={ () => removeAllFiles() }>
+          <DeleteIcon />
+        </Fab>
+      </div>
+    );
+  }
+
+  // Handle Upload Synchronously
+  const uploadFiles = () => {
+    // and so it begins
+    if(droppedFiles.length > 0) {
+      droppedFiles.map( (file, index) => {
+        
+        let fileReader = new FileReader();
+        let b64String = fileReader.readAsBinaryString(file);
+        console.log(`File # ${index}: ${b64String}`);
+      })
+    }
   }
 
   return (
@@ -194,6 +270,9 @@ export default function Dashboard() {
         open={open}
       >
         <div className={classes.toolbarIcon}>
+          <Typography>
+            <img width="130" src="https://img.pagecloud.com/pV_q2gEvwVyc6-f40Y1g5b-rX_k=/275x0/filters:no_upscale()/helux/images/image-ID-b56ffa65-3bc7-46c4-8458-7f9e22d92530.png" alt="Helux Logo" />
+          </Typography>
           <IconButton onClick={handleDrawerClose}>
             <ChevronLeftIcon />
           </IconButton>
@@ -229,19 +308,36 @@ export default function Dashboard() {
             </Grid>
             {/* File List */}
             { droppedFiles.length > 0 &&
+              
               <Grid item xs={12}>
-                <animated.div style={props}>
-                  <Paper className={classes.paper}>
+                
+                <Grid container alignItems="flex-start" justify="flex-end" direction="row">
+                  <FabButton />
+                </Grid>
+                <Paper className={classes.paper}>
                     <Title>Files to Upload</Title>
                     <ul>
                       {
                         droppedFiles.length > 0 && droppedFiles.map( (file, index) => (
-                          <ListFile key={ index } file={ file } />
+                          <List className={classes.listFiles} key={index}>
+                            <ListItem>
+                              <ListItemAvatar>
+                                <Avatar>
+                                  <WorkIcon />
+                                </Avatar>
+                              </ListItemAvatar>
+                              <ListItemText primary={ file.name } secondary={ friendlyDate( file.lastModified ) } />
+                              <ListItemSecondaryAction>
+                                  <IconButton edge="end" aria-label="Delete" onClick={ () => removeFile(index) }>
+                                      <DeleteIcon />
+                                  </IconButton>
+                              </ListItemSecondaryAction>
+                            </ListItem>
+                          </List>
                         ))
                       }
                     </ul>
-                  </Paper>
-                </animated.div>
+                </Paper>
               </Grid>
             }
             <Grid item xs={12}>

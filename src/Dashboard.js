@@ -39,6 +39,15 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import Fab from '@material-ui/core/Fab';
 import NavigationIcon from '@material-ui/icons/Navigation';
 
+import axios from 'axios';
+
+// Progress bar
+import ProgressBar from './ProgressBar';
+
+// Notify
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 function MadeWithLove() {
   return (
     <Typography variant="body2" color="textSecondary" align="center">
@@ -152,6 +161,11 @@ export default function Dashboard() {
 
   // Dropped files
   const [ droppedFiles, updateDroppedFiles ] = React.useState([]);
+
+  // Upload helpers
+  const [ uploading, setUploadingState ] = React.useState(false);
+
+  // Default files progress
   
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -165,6 +179,7 @@ export default function Dashboard() {
 
   const PaperDropZone = () => {
     const onDrop = useCallback(acceptedFiles => {
+      acceptedFiles.map( (file) => file.progress = 1)
       let newDroppedFiles = droppedFiles.concat(acceptedFiles);
       updateDroppedFiles(newDroppedFiles);
     }, [])
@@ -228,15 +243,45 @@ export default function Dashboard() {
   // Handle Upload Synchronously
   const uploadFiles = () => {
     // and so it begins
+    toast('Uploading files... 👋');
     if(droppedFiles.length > 0) {
+      setUploadingState(true);
+      let count = 1;
       droppedFiles.map( (file, index) => {
-        
-        let fileReader = new FileReader();
-        let b64String = fileReader.readAsBinaryString(file);
-        console.log(`File # ${index}: ${b64String}`);
-      })
+        let b64String = getBase64(file);
+        b64String.then( res => {
+          let data = {
+            file: res,
+            fileName: file.name
+          }
+          axios.post("https://z7mswkyrjc.execute-api.us-east-1.amazonaws.com/dev/upload", data, {
+            onUploadProgress: ProgressEvent => {
+              let lul = (ProgressEvent.loaded / ProgressEvent.total*100);
+              let collectiveProgress = [ ...droppedFiles ];
+              collectiveProgress[index].progress = lul;
+              updateDroppedFiles(collectiveProgress);
+            }
+          });
+          count++;
+          if(count === droppedFiles.length) {
+            setUploadingState(false);
+            toast('Files Uploaded 👋');
+          }
+        });
+      });
+      
     }
   }
+
+  // Base64 BC
+  const getBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+  };
 
   return (
     <div className={classes.root}>
@@ -333,6 +378,12 @@ export default function Dashboard() {
                                   </IconButton>
                               </ListItemSecondaryAction>
                             </ListItem>
+                            {
+                              uploading && 
+                              <ListItem>
+                                <ProgressBar key={ index } progress={file.progress} />
+                              </ListItem>
+                            }
                           </List>
                         ))
                       }

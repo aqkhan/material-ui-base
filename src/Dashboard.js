@@ -44,9 +44,11 @@ import axios from 'axios';
 // Progress bar
 import ProgressBar from './ProgressBar';
 
-// Notify
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+// File upload URL
+import { uploadUrl } from './config';
+
+// Indeterminate Progressbar
+import LinearProgress from '@material-ui/core/LinearProgress';
 
 function MadeWithLove() {
   return (
@@ -165,6 +167,9 @@ export default function Dashboard() {
   // Upload helpers
   const [ uploading, setUploadingState ] = React.useState(false);
 
+  // File processing helpers
+  const [ analyzing, updateAnalyzing ] = React.useState(false);
+
   // Default files progress
   
   const handleDrawerOpen = () => {
@@ -226,7 +231,6 @@ export default function Dashboard() {
 
   const FabButton = () => {
     const classes = useStyles();
-  
     return (
       <div>
         <Fab variant="extended" aria-label="Upload" className={classes.fab} color="primary" onClick={ () => uploadFiles() }>
@@ -243,10 +247,9 @@ export default function Dashboard() {
   // Handle Upload Synchronously
   const uploadFiles = () => {
     // and so it begins
-    toast('Uploading files... 👋');
     if(droppedFiles.length > 0) {
       setUploadingState(true);
-      let count = 1;
+      let count = 0;
       droppedFiles.map( (file, index) => {
         let b64String = getBase64(file);
         b64String.then( res => {
@@ -254,19 +257,35 @@ export default function Dashboard() {
             file: res,
             fileName: file.name
           }
-          axios.post("https://z7mswkyrjc.execute-api.us-east-1.amazonaws.com/dev/upload", data, {
+          axios.post(uploadUrl, data, {
             onUploadProgress: ProgressEvent => {
               let lul = (ProgressEvent.loaded / ProgressEvent.total*100);
               let collectiveProgress = [ ...droppedFiles ];
               collectiveProgress[index].progress = lul;
               updateDroppedFiles(collectiveProgress);
             }
-          });
-          count++;
-          if(count === droppedFiles.length) {
-            setUploadingState(false);
-            toast('Files Uploaded 👋');
-          }
+          })
+          .then( async (resp) => {
+            await console.log('File URL: ', resp.data.filePath);
+
+            // Getting wrong count value
+
+            await count++;
+            if(count === droppedFiles.length) {
+              setUploadingState(false);
+              updateAnalyzing(true);
+              console.log('Inside upload complete: ', count);
+
+              // This is where we're supposed to send a single classification call.
+              // Should be a promise based call, with max timeout
+              // Because we need to wait for the classification process to complete for all files
+              // Only then we can remove analyzing progress bar and move on to analysis screen
+
+              
+
+            }
+          })
+          .catch( (err) => console.log('Error uploading file: ', err) );
         });
       });
       
@@ -373,15 +392,33 @@ export default function Dashboard() {
                               </ListItemAvatar>
                               <ListItemText primary={ file.name } secondary={ friendlyDate( file.lastModified ) } />
                               <ListItemSecondaryAction>
-                                  <IconButton edge="end" aria-label="Delete" onClick={ () => removeFile(index) }>
+                                  {
+                                    !uploading && !analyzing &&
+                                    <IconButton edge="end" aria-label="Delete" onClick={ () => removeFile(index) }>
                                       <DeleteIcon />
-                                  </IconButton>
+                                    </IconButton>
+                                  }
+                                  {
+                                    analyzing &&
+                                    <IconButton edge="end" aria-label="Classifying..." >
+                                      <Typography variant="body2" color="textSecondary" align="center">
+                                        Classifying...
+                                      </Typography>
+                                    </IconButton>
+                                  }
                               </ListItemSecondaryAction>
                             </ListItem>
                             {
                               uploading && 
                               <ListItem>
                                 <ProgressBar key={ index } progress={file.progress} />
+                              </ListItem>
+                            }
+                            {
+                              analyzing &&
+                              <ListItem>
+                                <br />
+                                <LinearProgress color="secondary" key={index} style={{ flexGrow: 1 }} />
                               </ListItem>
                             }
                           </List>

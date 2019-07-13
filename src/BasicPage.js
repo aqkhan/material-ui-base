@@ -266,8 +266,7 @@ export default function Dashboard() {
             }
           })
           .then( async (resp) => {
-            //await console.log('File URL: ', resp.data.filePath);
-            await console.log('File Uploaded: ', resp.data);
+            await console.log('File URL: ', resp.data.filePath);
 
             // Getting wrong count value
 

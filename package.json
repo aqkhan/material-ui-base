@@ -16,6 +16,7 @@
     "react": "latest",
     "react-dom": "latest",
     "react-dropzone": "^10.1.5",
+    "react-router-dom": "^5.0.1",
     "react-scripts": "latest",
     "react-spring": "^8.0.27",
     "react-toastify": "^5.3.1",

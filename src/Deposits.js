@@ -14,6 +14,7 @@ const useStyles = makeStyles({
 
 export default function Deposits() {
   const classes = useStyles();
+  const taareekh = new Date();
   return (
     <React.Fragment>
       <Title>Recent Deposits</Title>
@@ -21,7 +22,7 @@ export default function Deposits() {
         $3,024.00
       </Typography>
       <Typography color="textSecondary" className={classes.depositContext}>
-        on 15 March, 2019
+        on { taareekh.toDateString() }
       </Typography>
       <div>
         <Link color="primary" href="javascript:;">

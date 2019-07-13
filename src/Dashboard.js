@@ -50,6 +50,22 @@ import { uploadUrl } from './config';
 // Indeterminate Progressbar
 import LinearProgress from '@material-ui/core/LinearProgress';
 
+// Auto Complete component
+import AutoComplete from './AutoComplete';
+
+// Comprehend Data mapper
+const dataMapper = ( data ) => {
+  let { entities } = data;
+  let entitiesToExport = [];
+  entities.map( (e) => {
+    entitiesToExport.push({
+      label: e.Text,
+      type: e.Type
+    });
+  });
+  return entitiesToExport;
+}
+
 function MadeWithLove() {
   return (
     <Typography variant="body2" color="textSecondary" align="center">
@@ -170,7 +186,8 @@ export default function Dashboard() {
   // File processing helpers
   const [ analyzing, updateAnalyzing ] = React.useState(false);
 
-  // Default files progress
+  // Comprehend data helpers
+  const [ comprehendData, updateComperehendData ] = React.useState([]);
   
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -267,15 +284,16 @@ export default function Dashboard() {
           })
           .then( async (resp) => {
             //await console.log('File URL: ', resp.data.filePath);
-            await console.log('File Uploaded: ', resp.data);
-
+            await console.log('Data mapped: ', dataMapper(resp.data));
+            let newComprehendData = comprehendData.concat(dataMapper(resp.data));
+            updateComperehendData(newComprehendData);
             // Getting wrong count value
 
             await count++;
             if(count === droppedFiles.length) {
               setUploadingState(false);
               updateAnalyzing(true);
-              console.log('Inside upload complete: ', count);
+              console.log('Inside upload complete: ', comprehendData);
 
               // This is where we're supposed to send a single classification call.
               // Should be a promise based call, with max timeout
@@ -368,6 +386,14 @@ export default function Dashboard() {
               <Paper className={classes.paper}>
                 <>
                   <PaperDropZone />
+                </>
+              </Paper>
+            </Grid>
+            {/* Auto Complete */}
+            <Grid item xs={12}>
+              <Paper className={classes.paper}>
+                <>
+                  <AutoComplete labelData={comprehendData} />
                 </>
               </Paper>
             </Grid>
